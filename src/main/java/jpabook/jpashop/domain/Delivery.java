@@ -8,8 +8,7 @@ import javax.persistence.*;
 import static javax.persistence.FetchType.*;
 
 @Entity
-@Getter
-@Setter
+@Getter @Setter
 public class Delivery {
 
     @Id
