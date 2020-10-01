@@ -1,5 +1,6 @@
 package jpabook.jpashop.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,7 +22,8 @@ public class OrderItem {
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "item_id")
     private Item item;
-
+    
+    @JsonIgnore     // 양방향 연관관계가 있을 때 한쪽은 JsonIgnore 해야 순환참조, 무한루프에 빠지지 않는다.
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "order_id")
     private Order order;

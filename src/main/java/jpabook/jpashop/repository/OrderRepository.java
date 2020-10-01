@@ -119,4 +119,17 @@ public class OrderRepository {
          * └─> 다음에 다룰 예정
          */
     }
+    
+    /*
+     * fetch join 을 사용해서 내용을 한번에 즉, 쿼리 한번으로 모든 내용을 조회해온다.
+     * └─> LAZY Loading 에 따른 N + 1 이슈
+     */
+    public List<Order> findAllWithMemberDelivery() {
+        return em.createQuery(
+                "select o from Order o" +
+                        " join fetch o.member m" +
+                        " join fetch o.delivery d", Order.class
+        ).getResultList();
+    }
+    
 }
