@@ -132,4 +132,36 @@ public class OrderRepository {
         ).getResultList();
     }
     
+    /*
+     * JPA 에서의 distinct 키워드는
+     * DB 에서와 조금 다르게 동작한다.
+     *
+     * DB 에서는 조회한 row 의 결과가 완전 동일한 경우 중복을 제거하는 반면
+     * 지금의 경우 Order 객체를 조회하고 있기 때문에 ( -> from Order)
+     * DB 에도 distinct 하고 애플리케이션 레벨에서 조회해온 Order 객체가 동일할 경우 중복을 제거해준다.
+     *
+     * 즉, 로그에 남은 조회 쿼리를 직접 실행해본 결과와
+     * 이 메소드를 실행해서 받은 응답 결과가 다를 수 있다.
+     *
+     */
+    public List<Order> findAllWithItem() {
+        return em.createQuery(
+                "select distinct o from Order o" +
+                        " join fetch o.member m" +
+                        " join fetch o.delivery d" +
+                        " join fetch o.orderItems oi" +
+                        " join fetch oi.item i", Order.class)
+                .getResultList();
+    }
+    
+    public List<Order> findAllWithMemberDelivery(int offset, int limit) {
+        return em.createQuery(
+                "select o from Order o" +
+                        " join fetch o.member m" +
+                        " join fetch o.delivery d", Order.class
+                )
+                .setFirstResult(offset)
+                .setMaxResults(limit)
+                .getResultList();
+    }
 }
