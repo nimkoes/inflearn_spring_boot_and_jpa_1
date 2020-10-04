@@ -1,14 +1,16 @@
 package jpabook.jpashop.repository;
 
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import jpabook.jpashop.domain.Order;
+import jpabook.jpashop.domain.OrderStatus;
+import jpabook.jpashop.domain.QMember;
+import jpabook.jpashop.domain.QOrder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.*;
-import java.util.ArrayList;
 import java.util.List;
 
 @Repository
@@ -90,7 +92,7 @@ public class OrderRepository {
          * └─> jpql 을 java 코드로 작성할 때, JPA 에서 제공하는 동적 쿼리를 생성하는 표준으로 제공해주는 기능
          *     사람이 사용할게 못된다.
          */
-        
+        /*
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Order> cq = cb.createQuery(Order.class);
         Root<Order> o = cq.from(Order.class);
@@ -112,13 +114,47 @@ public class OrderRepository {
         TypedQuery<Order> query = em.createQuery(cq).setMaxResults(1000);
         
         return query.getResultList();
-        
+        */
         
         /**
          * SOLUTION 3 : QueryDSL 사용
-         * └─> 다음에 다룰 예정
+         * └─> querydsl 을 위한 빌드 설정을 한 다음 Q 파일을 생성하도록 compileQuerydsl 을 실행한다.
+         *     현재 설정 기준으로 'src/main/generated' 하위에 Q 파일들이 생성된다.
+         *     이것들을 활용해서 동적 쿼리를 작성한다.
+         *
+         *     static import, constructor di 등을 사용하면 더 축약 가능
          */
+        JPAQueryFactory query = new JPAQueryFactory(em);
+        QOrder order = QOrder.order;
+        QMember member = QMember.member;
+        
+        return query
+                .select(order)
+                .from(order)
+                .join(order.member, member)
+//                .where(statusEq(orderSearch.getOrderStatus()))
+//                .where(order.status.eq(orderSearch.getOrderStatus()), member.name.like(orderSearch.getMemberName()))
+                .where(order.status.eq(orderSearch.getOrderStatus()), nameLike(orderSearch.getMemberName()))
+                .limit(1000)
+                .fetch();
     }
+    
+    
+    // querydsl 조건절을 위한 메소드
+    private BooleanExpression statusEq(OrderStatus statusCond) {
+        if (statusCond == null) {
+            return null;
+        }
+        return QOrder.order.status.eq(statusCond);
+    }
+    
+    private BooleanExpression nameLike(String memberName) {
+        if (StringUtils.hasText(memberName)) {
+            return null;
+        }
+        return QMember.member.name.like(memberName);
+    }
+    
     
     /*
      * fetch join 을 사용해서 내용을 한번에 즉, 쿼리 한번으로 모든 내용을 조회해온다.
